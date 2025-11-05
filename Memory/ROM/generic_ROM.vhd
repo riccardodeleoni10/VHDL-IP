@@ -1,6 +1,6 @@
 ----------------------------------------------------------------------------------
 -- Company: 
--- Engineer: Riccardo De Leoni
+-- Engineer: 
 -- 
 -- Create Date: 03.11.2025 13:38:42
 -- Design Name: 
@@ -37,8 +37,8 @@ entity generic_ROM is
       generic (
         DATA_WIDTH: integer := 16;
         ROM_SIZE  : integer := 16;
-        ROM_FILE : string   := "data.txt"; -- give the complete path, read REMIND down below;
-        USE_OFFSET: string  := "no" --or yes
+        ROM_FILE : string   := "C:\Users\Riccardo\Documents\Progetti_personali\fileDiTesto\data.txt"; -- give the complete path, read REMIND down below;
+        USE_OFFSET: string  := "yes" --or yes
       );
 --REMIND : if the file.txt isn't in the same directory of the project and if you don't give the complete path,
 --          is it possible to have scope issues and it won't be possible to read the file
@@ -68,12 +68,61 @@ architecture Behavioral of generic_ROM is
          return rom;
     end function;
 --Signals
-    signal ROM           : memory_array(0 to ROM_SIZE-1)(DATA_WIDTH-1 downto 0) := init_ROM("data.txt");
+    signal ROM           : memory_array(0 to ROM_SIZE-1)(DATA_WIDTH-1 downto 0) := init_ROM(ROM_FILE);
     signal cnt           : unsigned(log2(natural(ROM_SIZE))-1 downto 0);
     signal last_addr     : unsigned(log2(natural(ROM_SIZE))-1 downto 0);
     signal offset_reg    : std_logic_vector(log2(natural(ROM_SIZE))-1 downto 0);
     signal addr_start_reg: std_logic_vector(log2(natural(ROM_SIZE))-1 downto 0); 
 begin
+
+----------------------------------------------------------------------------------
+----------------------------------------------------------------------------------
+-- ROM with custimizable start addresse and offset
+ 
+WithOffset_GEN: if USE_OFFSET = "yes" generate
+    init_process: process(clk)
+    begin
+        if rising_edge(clk) then
+            if reset = '1' then 
+                addr_start_reg<=(others=> '0');
+                offset_reg    <=(others => '0');
+            elsif enable = '1' and load = '1' then
+                addr_start_reg <= addr_start;
+                offset_reg     <= offset;
+            else
+                addr_start_reg <= addr_start_reg;
+                offset_reg     <= offset_reg;
+            end if;
+        end if;
+    end process;
+    last_addr <= unsigned(offset_reg) + unsigned(addr_start_reg);
+    addr_gen_proc: process(clk)
+    begin
+        if rising_edge(clk) then 
+            if reset = '1' then
+               cnt<= unsigned(addr_start_reg);
+            elsif enable = '1' and load = '1' then
+                    cnt <= unsigned(addr_start_reg);
+            elsif enable = '1' and load = '0' then 
+                    if cnt = last_addr then
+                        cnt <=unsigned(addr_start_reg);
+                    else
+                        cnt<= cnt + 1;
+                end if;
+            end if;
+        end if;
+    end process;
+    data_out_proc:process(clk)
+        begin
+            if rising_edge (clk) then 
+                if enable = '1' and load = '0' then
+                    data_out <= rom(TO_INTEGER(cnt));
+                end if;
+            end if;
+        end process;
+end generate;
+----------------------------------------------------------------------------------
+----------------------------------------------------------------------------------
 -- Normal self incrementing ROM
     --You have to comment "offset" in the entity or stuck it at zero;
     --You have to comment "addr" in the entity;
@@ -103,49 +152,4 @@ Normal_ROM_GEN  : if USE_OFFSET = "no" generate
         end if;
     end process;
 end generate;
-----------------------------------------------------------------------------------
-----------------------------------------------------------------------------------
--- ROM with custimizable start addresse and offset
- 
-WithOffset_GEN: if USE_OFFSET = "yes" generate
-    init_process: process(clk)
-    begin
-        if rising_edge(clk) then
-            if reset = '1' then 
-                addr_start_reg<=(others=> '0');
-                offset_reg    <=(others => '0');
-            elsif enable = '1' and load = '1' then
-                addr_start_reg <= addr_start;
-                offset_reg     <= offset;
-            else
-                addr_start_reg <= addr_start_reg;
-                offset_reg     <= offset_reg;
-            end if;
-        end if;
-    end process;
-    last_addr <= unsigned(offset_reg) + unsigned(addr_start_reg);
-    addr_gen_proc: process(clk)
-    begin
-        if rising_edge(clk) then 
-            if reset = '1' then
-               cnt<= unsigned(addr_start_reg);
-            elsif enable = '1' and load = '0' then
-                if cnt = last_addr then
-                    cnt<=unsigned(addr_start_reg);
-                else
-                    cnt<= cnt + 1;
-                end if;
-            end if;
-        end if;
-    end process;
-    data_out_proc:process(clk)
-        begin
-            if rising_edge (clk) then 
-                if enable = '1' and load = '0' then
-                    data_out <= rom(TO_INTEGER(cnt));
-                end if;
-            end if;
-        end process;
-end generate;
-
 end Behavioral;
