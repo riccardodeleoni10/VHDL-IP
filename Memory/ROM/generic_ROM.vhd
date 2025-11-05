@@ -37,7 +37,7 @@ entity generic_ROM is
       generic (
         DATA_WIDTH: integer := 16;
         ROM_SIZE  : integer := 16;
-        ROM_FILE : string   := "C:\Users\Riccardo\Documents\Progetti_personali\fileDiTesto\data.txt"; -- give the complete path, read REMIND down below;
+        ROM_FILE : string   := "data.txt"; -- give the complete path, read REMIND down below;
         USE_OFFSET: string  := "yes" --or yes
       );
 --REMIND : if the file.txt isn't in the same directory of the project and if you don't give the complete path,
