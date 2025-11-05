@@ -59,7 +59,7 @@ DUT: generic_ROM
     generic map(
         DATA_WIDTH => 16,
         ROM_SIZE  => 16, 
-        ROM_FILE  => "C:\Users\Riccardo\Documents\Progetti_personali\fileDiTesto\data.txt",
+        ROM_FILE  => "data.txt", --give the complete path
         USE_OFFSET => "no"     
     )
     port map (
