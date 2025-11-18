@@ -42,6 +42,10 @@ package my_pkg is
         in2: std_logic_vector;
         sel: std_logic
     )return std_logic_vector;
+    function add_u(
+    in1 : std_logic_vector;
+    in2 : std_logic_vector
+    ) return unsigned;
 --  CUSTOM TYPES    
     --  "Memory array" : used to declare memories
     type memory_array is array (natural range <>) of std_logic_vector;   
@@ -90,5 +94,24 @@ package body my_pkg is
             when others => return(in2);
         end case;
     end function;
-    
-end package body;
+----------------------------------------------------------------------------------
+----------------------------------------------------------------------------------
+-- ADD_U
+function add_u(
+    in1 : std_logic_vector;
+    in2 : std_logic_vector
+) return unsigned is
+    constant N1 : integer := in1'length;
+    constant N2 : integer := in2'length;
+    constant N  : integer := integer(maximum(N1, N2));
+
+    variable a   : unsigned(N-1 downto 0);
+    variable b   : unsigned(N-1 downto 0);
+    variable sum : unsigned(N downto 0); 
+begin
+    a := resize(unsigned(in1), N);
+    b := resize(unsigned(in2), N);
+    sum := ('0' & a) + ('0' & b);
+    return sum;
+end function;
+ end package body;
